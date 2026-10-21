@@ -27,14 +27,17 @@ flowchart TD
 1. `store` reads every thread with a `worktreePath`, including deleted and
    archived threads, with its project and last activity. Activity is the latest
    of thread creation, user message and run request, start and completion times.
-2. `plan` keeps threads of the selected projects, groups them by worktree path and
-   drops paths that no longer exist. A worktree is `recent` if any thread was
+2. `plan` groups threads by worktree path, keeps worktrees with at least one thread
+   of the selected projects and drops paths that no longer exist. Threads of other
+   projects in a kept worktree still count as activity. A worktree is `recent` if any thread was
    active after the cutoff. Otherwise it is a `candidate`, or `skipped` when it
-   has uncommitted or untracked changes or commits no remote branch contains.
+   has uncommitted or untracked changes or commits no remote branch contains, or
+   when these checks fail.
    The checked-out branch is marked for deletion unless it is `main`, `master` or
    the branch `origin/HEAD` points to.
 3. `apply` finds each requested path in the plan. It skips recent worktrees, and
-   skipped ones unless `--force` is set. It runs `git worktree remove` from the
+   skipped ones unless `--force` is set. `--force` never overrides a skip caused by
+   failed checks. It runs `git worktree remove` from the
    project root, then `git branch -D`, and reports the branch's commit SHA.
 
 ## Modules and dependencies

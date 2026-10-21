@@ -27,7 +27,8 @@ crap: coverage
 
 ## Optional locally: no surviving mutants in code changed since MUTATION_BASE.
 mutants:
-	git diff $(MUTATION_BASE) -- src > target/mutants.diff
+	mkdir -p target
+	git diff --src-prefix=a/ --dst-prefix=b/ $(MUTATION_BASE) -- src > target/mutants.diff
 	cargo mutants --in-diff target/mutants.diff
 
 ## Report every surviving mutant.

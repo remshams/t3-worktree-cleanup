@@ -432,3 +432,51 @@ fn base_dir_defaults_to_t3code_home_then_home() {
     assert_eq!(from_t3_home["candidates"], 1);
     assert_eq!(from_home["candidates"], 1);
 }
+
+#[test]
+fn force_does_not_override_failed_checks() {
+    let fixture = Fixture::new();
+    let broken = fixture.dir.path().join("t3/worktrees/demo/broken");
+    std::fs::create_dir_all(&broken).unwrap();
+    std::fs::write(broken.join(".git"), "gitdir: /nowhere").unwrap();
+    fixture.thread("t1", &broken, OLD);
+
+    let (code, outcomes) = fixture.run(&["apply", "--force", broken.to_str().unwrap()]);
+
+    assert_eq!(code, 0);
+    assert_eq!(outcomes[0]["status"], "skipped");
+    assert!(
+        outcomes[0]["reasons"][0]
+            .as_str()
+            .unwrap()
+            .contains("git status")
+    );
+    assert!(broken.exists());
+}
+
+#[test]
+fn project_filter_keeps_activity_from_other_projects() {
+    let fixture = Fixture::new();
+    let shared = fixture.worktree("shared");
+    fixture.thread("t1", &shared, OLD);
+    fixture
+        .db
+        .execute(
+            "INSERT INTO projection_projects VALUES ('p2', 'other', '/elsewhere')",
+            [],
+        )
+        .unwrap();
+    let payload = serde_json::json!({ "worktreePath": shared });
+    fixture
+        .db
+        .execute(
+            "INSERT INTO orchestration_v2_projection_threads VALUES ('t2', 'p2', 't2', ?1, ?2)",
+            params![now(), payload.to_string()],
+        )
+        .unwrap();
+
+    let (_, plan) = fixture.run(&["plan", "--project", "demo"]);
+
+    assert_eq!(plan["candidates"], 0);
+    assert_eq!(plan["recent"], 1);
+}

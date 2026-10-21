@@ -41,6 +41,9 @@ pub struct Worktree {
     pub project_root: PathBuf,
     pub status: Status,
     pub reasons: Vec<String>,
+    /// False when the safety checks failed, so `--force` can't override the skip.
+    #[serde(skip)]
+    pub forceable: bool,
     pub last_activity_at: DateTime<Utc>,
     pub size_bytes: u64,
     /// Branch checked out in the worktree; `None` for a detached HEAD.
@@ -67,14 +70,18 @@ impl Plan {
         let cutoff = now - selection.older_than;
         let mut groups: BTreeMap<PathBuf, Vec<ThreadRow>> = BTreeMap::new();
         for thread in threads {
-            if selection.projects.is_empty()
-                || selection.projects.iter().any(|p| matches(p, &thread))
-            {
-                groups
-                    .entry(thread.worktree_path.clone())
-                    .or_default()
-                    .push(thread);
-            }
+            groups
+                .entry(thread.worktree_path.clone())
+                .or_default()
+                .push(thread);
+        }
+        // Filter whole worktrees, so threads of other projects still count as activity.
+        if !selection.projects.is_empty() {
+            groups.retain(|_, threads| {
+                threads
+                    .iter()
+                    .any(|thread| selection.projects.iter().any(|p| matches(p, thread)))
+            });
         }
         let mut worktrees: Vec<Worktree> = groups
             .into_iter()
@@ -129,6 +136,7 @@ fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: DateTime<Utc>) -> Wo
         project_root: first.project_root.clone(),
         status: Status::Recent,
         reasons: Vec::new(),
+        forceable: false,
         last_activity_at,
         size_bytes: 0,
         branch: None,
@@ -148,8 +156,10 @@ fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: DateTime<Utc>) -> Wo
         return worktree;
     }
     worktree.size_bytes = dir_size(&worktree.path);
-    worktree.reasons =
-        blocking_reasons(&worktree.path).unwrap_or_else(|error| vec![error.to_string()]);
+    (worktree.reasons, worktree.forceable) = match blocking_reasons(&worktree.path) {
+        Ok(reasons) => (reasons, true),
+        Err(error) => (vec![error.to_string()], false),
+    };
     worktree.status = if worktree.reasons.is_empty() {
         Status::Candidate
     } else {

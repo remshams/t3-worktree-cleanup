@@ -29,8 +29,8 @@ crap: coverage
 mutants:
 	mkdir -p target
 	git diff --src-prefix=a/ --dst-prefix=b/ $(MUTATION_BASE) -- src > target/mutants.diff
-	cargo mutants --in-diff target/mutants.diff
+	cargo mutants --timeout 60 --in-diff target/mutants.diff
 
 ## Report every surviving mutant.
 mutants-all:
-	cargo mutants
+	cargo mutants --timeout 60

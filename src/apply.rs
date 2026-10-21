@@ -59,7 +59,7 @@ fn apply_one(worktree: &Worktree, force: bool) -> Outcome {
                 "active within the selected period",
             );
         }
-        Status::Skipped if !force => {
+        Status::Skipped if !force || !worktree.forceable => {
             return Outcome {
                 path: worktree.path.clone(),
                 status: OutcomeStatus::Skipped,

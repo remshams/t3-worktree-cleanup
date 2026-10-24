@@ -16,6 +16,26 @@ dependency rules, runtime flow and tests. Update it in the same change when
 modules, dependencies or ownership change. The [ADR index](docs/adr/README.md)
 records decisions and explains when to add or supersede a record.
 
+## Domain language
+
+Describe architecture in Domain-Driven Design terms. This applies to
+architecture documents, ADRs, issues, PR descriptions and explanations of the
+code.
+
+- Use the project's ubiquitous language: the words the domain uses, such as
+  `worktree`, `thread` and `cleanup plan`. Use the same word in code, docs and
+  conversation, and don't switch between synonyms for one concept.
+- Name the parts of the model by their DDD role. An entity keeps its identity as
+  its data changes. A value object is defined by its values and is immutable. An
+  aggregate is a cluster of objects that changes only through its root.
+- Call stateless domain logic that belongs to no single type a domain service,
+  and code that runs one use case an application service.
+- Call a part of the model with its own language a bounded context. Code that
+  reads T3's state database or runs git is an adapter; keep T3's table and
+  column names out of the cleanup rule.
+- Use these terms to describe the code that exists. Don't add layers, interfaces
+  or folders just to match a DDD pattern; keeping the project small still wins.
+
 ## Development
 
 Keep the project small and simple. Handle realistic failure modes only; avoid

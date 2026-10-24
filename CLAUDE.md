@@ -46,8 +46,6 @@ publishing it.
 - When the work on a PR is finished and pushed, request a review once with
   `gh pr comment <n> --body "@coderabbitai review"`. Do not request one after
   every push; batch fixes and request one review per round.
-- The main branch ruleset requires CodeRabbit's approval. After the last fix,
-  request a final review and wait for the approval before merging.
 - If CodeRabbit replies that the rate limit is exceeded, wait the stated time,
   then request the review again.
 

@@ -10,6 +10,12 @@ Start with a short paragraph explaining the problem, what motivated the change, 
 
 For example, explain that `plan` ignored runs started by subagent threads, so shared worktrees looked inactive too early, and that the change counts those runs. Avoid opening with a list of files or a chronology of implementation work.
 
+## Visual summary
+
+Follow the opening description with a visual when it shows the change faster than prose: pseudocode, a call tree, a component or file tree, a Mermaid diagram, or a `diff` sketch of one of these. Pick the smallest view that makes the key point clear. Skip this section when a sentence says enough, such as for a documentation fix.
+
+Read the [pull request visuals guide](pull-request-visuals.md) for an example of each type and when to use it.
+
 ## Architecture impact
 
 Use the module names in the [architecture document](architecture.md). Include a table with one row for each affected module. Describe changes to its responsibilities, dependencies, contracts, or communication with other modules.
@@ -42,6 +48,14 @@ Choose `small`, `medium`, or `high` and explain the rating in terms of what coul
 - `high` fits a change that could delete worktrees or branches that should be kept, or break agent scripts.
 
 Name the main failure case, the validation that reduces the risk, and any remaining uncertainty. Explain recovery steps when reverting the commit alone would not restore deleted data.
+
+## Evidence
+
+Show concrete before and after evidence that the change works.
+
+Show execution output: the test that failed before the change and passes after it, or `plan` output before and after the change. Pseudocode is fine when the full test is long.
+
+For a change with no observable behavior, such as documentation or a refactor, say so and point to the validation below.
 
 ## Validation and CI
 

@@ -45,7 +45,7 @@ pub fn branch_sha(repo: &Path, branch: &str) -> Result<String> {
     git(repo, &["rev-parse", &format!("refs/heads/{branch}")])
 }
 
-/// Removes `worktree` even when it has uncommitted or untracked files. A locked
+/// Removes `worktree` with its uncommitted, untracked and ignored files. A locked
 /// worktree still fails.
 pub fn remove_worktree(repo: &Path, worktree: &Path) -> Result<()> {
     let worktree = worktree.to_string_lossy();

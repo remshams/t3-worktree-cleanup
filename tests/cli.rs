@@ -220,7 +220,7 @@ fn runs_and_user_messages_count_as_activity() {
 }
 
 #[test]
-fn plan_skips_worktrees_with_local_work() {
+fn plan_skips_only_worktrees_with_unpushed_commits() {
     let fixture = Fixture::new();
     let dirty = fixture.worktree("dirty");
     let unpushed = fixture.worktree("unpushed");
@@ -234,15 +234,24 @@ fn plan_skips_worktrees_with_local_work() {
 
     let plan = fixture.plan();
 
-    assert_eq!(plan["skipped"], 2);
-    let reasons: Vec<&Value> = plan["worktrees"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|w| &w["reasons"])
-        .collect();
-    assert!(reasons.contains(&&serde_json::json!(["uncommitted or untracked changes"])));
-    assert!(reasons.contains(&&serde_json::json!(["1 commits not on any remote"])));
+    assert_eq!(plan["candidates"], 1);
+    assert_eq!(plan["skipped"], 1);
+    let worktrees = plan["worktrees"].as_array().unwrap();
+    let status = |path: &Path| {
+        let worktree = worktrees
+            .iter()
+            .find(|w| w["path"] == path.to_str().unwrap())
+            .unwrap();
+        (worktree["status"].clone(), worktree["reasons"].clone())
+    };
+    assert_eq!(status(&dirty), ("candidate".into(), serde_json::json!([])));
+    assert_eq!(
+        status(&unpushed),
+        (
+            "skipped".into(),
+            serde_json::json!(["1 commits not on any remote"])
+        )
+    );
 }
 
 #[test]
@@ -317,21 +326,46 @@ fn apply_keeps_the_default_branch() {
 }
 
 #[test]
-fn apply_skips_local_work_unless_forced() {
+fn apply_deletes_uncommitted_and_untracked_files() {
     let fixture = Fixture::new();
     let dirty = fixture.worktree("dirty");
-    std::fs::write(dirty.join("notes.txt"), "draft").unwrap();
+    std::fs::write(dirty.join("tracked.txt"), "committed").unwrap();
+    git(&dirty, &["add", "tracked.txt"]);
+    git(&dirty, &["commit", "--quiet", "-m", "tracked"]);
+    git(&dirty, &["push", "--quiet", "origin", "dirty"]);
+    std::fs::write(dirty.join("tracked.txt"), "modified").unwrap();
+    std::fs::write(dirty.join("staged.txt"), "staged").unwrap();
+    git(&dirty, &["add", "staged.txt"]);
+    std::fs::write(dirty.join("untracked.txt"), "draft").unwrap();
     fixture.thread("t1", &dirty, OLD);
 
     let (code, outcomes) = fixture.run(&["apply", dirty.to_str().unwrap()]);
-    assert_eq!(code, 0);
-    assert_eq!(outcomes[0]["status"], "skipped");
-    assert!(dirty.exists());
 
-    let (code, outcomes) = fixture.run(&["apply", "--force", dirty.to_str().unwrap()]);
     assert_eq!(code, 0);
     assert_eq!(outcomes[0]["status"], "deleted");
+    assert_eq!(outcomes[0]["branch"]["deleted"], true);
     assert!(!dirty.exists());
+}
+
+#[test]
+fn apply_skips_unpushed_commits_unless_forced() {
+    let fixture = Fixture::new();
+    let unpushed = fixture.worktree("unpushed");
+    git(
+        &unpushed,
+        &["commit", "--quiet", "--allow-empty", "-m", "local"],
+    );
+    fixture.thread("t1", &unpushed, OLD);
+
+    let (code, outcomes) = fixture.run(&["apply", unpushed.to_str().unwrap()]);
+    assert_eq!(code, 0);
+    assert_eq!(outcomes[0]["status"], "skipped");
+    assert!(unpushed.exists());
+
+    let (code, outcomes) = fixture.run(&["apply", "--force", unpushed.to_str().unwrap()]);
+    assert_eq!(code, 0);
+    assert_eq!(outcomes[0]["status"], "deleted");
+    assert!(!unpushed.exists());
 }
 
 #[test]
@@ -453,7 +487,7 @@ fn force_does_not_override_failed_checks() {
         outcomes[0]["reasons"][0]
             .as_str()
             .unwrap()
-            .contains("git status")
+            .contains("git rev-list")
     );
     assert!(broken.exists());
 }

@@ -130,8 +130,13 @@ impl Fixture {
     }
 }
 
+/// T3's timestamp format: UTC with milliseconds.
+fn timestamp(at: jiff::Timestamp) -> String {
+    at.strftime("%Y-%m-%dT%H:%M:%S%.3fZ").to_string()
+}
+
 fn now() -> String {
-    chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true)
+    timestamp(jiff::Timestamp::now())
 }
 
 fn statuses(plan: &Value) -> Vec<(String, String)> {
@@ -258,8 +263,7 @@ fn project_filter_matches_title_or_root() {
 fn older_than_sets_the_cutoff() {
     let fixture = Fixture::new();
     let old = fixture.worktree("old");
-    let yesterday = (chrono::Utc::now() - chrono::TimeDelta::hours(30))
-        .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+    let yesterday = timestamp(jiff::Timestamp::now() - jiff::SignedDuration::from_hours(30));
     fixture.thread("t1", &old, &yesterday);
 
     assert_eq!(fixture.run(&["plan"]).1["candidates"], 0);

@@ -2,14 +2,14 @@
 
 use crate::git;
 use crate::store::ThreadRow;
-use chrono::{DateTime, TimeDelta, Utc};
+use jiff::{SignedDuration, Timestamp};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 pub struct Selection {
-    pub older_than: TimeDelta,
+    pub older_than: SignedDuration,
     pub projects: Vec<String>,
 }
 
@@ -30,7 +30,7 @@ pub struct Thread {
     pub id: String,
     pub title: String,
     pub settled_at: Option<String>,
-    pub last_activity_at: DateTime<Utc>,
+    pub last_activity_at: Timestamp,
 }
 
 #[derive(Debug, Serialize)]
@@ -44,7 +44,7 @@ pub struct Worktree {
     /// False when the safety checks failed, so `--force` can't override the skip.
     #[serde(skip)]
     pub forceable: bool,
-    pub last_activity_at: DateTime<Utc>,
+    pub last_activity_at: Timestamp,
     pub size_bytes: u64,
     /// Branch checked out in the worktree; `None` for a detached HEAD.
     pub branch: Option<String>,
@@ -56,7 +56,7 @@ pub struct Worktree {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Plan {
-    pub cutoff: DateTime<Utc>,
+    pub cutoff: Timestamp,
     pub candidates: usize,
     pub candidate_bytes: u64,
     pub skipped: usize,
@@ -66,7 +66,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    pub fn build(threads: Vec<ThreadRow>, selection: &Selection, now: DateTime<Utc>) -> Plan {
+    pub fn build(threads: Vec<ThreadRow>, selection: &Selection, now: Timestamp) -> Plan {
         let cutoff = now - selection.older_than;
         let mut groups: BTreeMap<PathBuf, Vec<ThreadRow>> = BTreeMap::new();
         for thread in threads {
@@ -124,7 +124,7 @@ fn matches(project: &str, thread: &ThreadRow) -> bool {
     project == thread.project_title || project == thread.project_id || root == thread.project_root
 }
 
-fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: DateTime<Utc>) -> Worktree {
+fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: Timestamp) -> Worktree {
     let last_activity_at = threads
         .iter()
         .map(|thread| thread.activity_at)
@@ -210,7 +210,7 @@ mod tests {
     #[test]
     fn activity_exactly_at_the_cutoff_is_inactive() {
         let dir = tempfile::TempDir::new().unwrap();
-        let now = Utc::now();
+        let now = Timestamp::now();
         let thread = ThreadRow {
             thread_id: "t1".into(),
             title: "t1".into(),
@@ -219,10 +219,10 @@ mod tests {
             project_root: dir.path().into(),
             worktree_path: dir.path().into(),
             settled_at: None,
-            activity_at: now - TimeDelta::days(4),
+            activity_at: now - SignedDuration::from_hours(96),
         };
         let selection = Selection {
-            older_than: TimeDelta::days(4),
+            older_than: SignedDuration::from_hours(96),
             projects: Vec::new(),
         };
 

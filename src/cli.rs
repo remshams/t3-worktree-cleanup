@@ -7,9 +7,10 @@ use std::path::PathBuf;
 /// Delete T3 Code worktrees whose threads have been inactive for a while.
 ///
 /// Run `plan` to preview, then `apply` with the paths to delete. Both print JSON.
-/// Uncommitted and untracked files are deleted with the worktree. Worktrees with
-/// unpushed commits are skipped unless `apply --force` is given. Deleting a
-/// worktree also deletes its local branch, except the default branch.
+/// Uncommitted, untracked and ignored files, including nested repositories, are
+/// deleted with the worktree. Worktrees with unpushed commits are skipped unless
+/// `apply --force` is given. Deleting a worktree also deletes its local branch,
+/// except the default branch.
 #[derive(Debug, Parser)]
 #[command(version)]
 pub struct Cli {

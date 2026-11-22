@@ -56,7 +56,7 @@ fn build_plan(args: SelectionArgs) -> Result<Plan> {
         older_than: args.older_than,
         projects: args.projects,
     };
-    Ok(Plan::build(threads, &selection, chrono::Utc::now()))
+    Ok(Plan::build(threads, &selection, jiff::Timestamp::now()))
 }
 
 fn default_base_dir() -> Result<PathBuf> {

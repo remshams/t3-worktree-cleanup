@@ -1,7 +1,7 @@
 //! Command-line arguments.
 
-use chrono::TimeDelta;
 use clap::{Args, Parser, Subcommand};
+use jiff::SignedDuration;
 use std::path::PathBuf;
 
 /// Delete T3 Code worktrees whose threads have been inactive for a while.
@@ -38,7 +38,7 @@ pub enum Command {
 pub struct SelectionArgs {
     /// Minimum inactivity, as days or hours: 4d, 36h.
     #[arg(long, default_value = "4d", value_parser = parse_age)]
-    pub older_than: TimeDelta,
+    pub older_than: SignedDuration,
     /// Only this project, by title, id or root path. Repeatable.
     #[arg(long = "project")]
     pub projects: Vec<String>,
@@ -47,12 +47,13 @@ pub struct SelectionArgs {
     pub base_dir: Option<PathBuf>,
 }
 
-fn parse_age(value: &str) -> Result<TimeDelta, String> {
+fn parse_age(value: &str) -> Result<SignedDuration, String> {
     let invalid = || format!("expected a number followed by d or h, got {value:?}");
-    let (number, unit): (&str, fn(i64) -> TimeDelta) = if let Some(n) = value.strip_suffix('d') {
-        (n, TimeDelta::days)
+    let (number, unit): (&str, fn(i64) -> SignedDuration) = if let Some(n) = value.strip_suffix('d')
+    {
+        (n, |days| SignedDuration::from_hours(days * 24))
     } else if let Some(n) = value.strip_suffix('h') {
-        (n, TimeDelta::hours)
+        (n, SignedDuration::from_hours)
     } else {
         return Err(invalid());
     };
@@ -67,8 +68,8 @@ mod tests {
 
     #[test]
     fn parses_days_and_hours() {
-        assert_eq!(parse_age("4d"), Ok(TimeDelta::days(4)));
-        assert_eq!(parse_age("36h"), Ok(TimeDelta::hours(36)));
+        assert_eq!(parse_age("4d"), Ok(SignedDuration::from_hours(96)));
+        assert_eq!(parse_age("36h"), Ok(SignedDuration::from_hours(36)));
     }
 
     #[test]

@@ -18,7 +18,7 @@ pub struct Selection {
 pub enum Status {
     /// Inactive and safe to delete.
     Candidate,
-    /// Inactive, but deleting it would lose work.
+    /// Inactive, but deleting it would lose commits that no remote has.
     Skipped,
     /// Active within the selected period.
     Recent,
@@ -173,17 +173,15 @@ fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: Timestamp) -> Worktr
     worktree
 }
 
-/// Reasons that deleting the worktree and its branch would lose work.
+/// Reasons that deleting the worktree and its branch would lose commits.
+/// Uncommitted and untracked files don't block deletion.
 fn blocking_reasons(path: &Path) -> anyhow::Result<Vec<String>> {
-    let mut reasons = Vec::new();
-    if git::has_local_changes(path)? {
-        reasons.push("uncommitted or untracked changes".to_string());
-    }
     let unpushed = git::unpushed_commits(path)?;
-    if unpushed > 0 {
-        reasons.push(format!("{unpushed} commits not on any remote"));
-    }
-    Ok(reasons)
+    Ok(if unpushed > 0 {
+        vec![format!("{unpushed} commits not on any remote")]
+    } else {
+        Vec::new()
+    })
 }
 
 fn is_protected(repo: &Path, branch: &str) -> bool {

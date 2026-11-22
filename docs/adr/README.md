@@ -33,4 +33,5 @@ commits and code review.
 | [0002](0002-keep-the-tool-small.md) | Keep the tool small and handle realistic failures | Accepted |
 | [0003](0003-quality-gates.md) | Gate quality with Clippy, coverage, CRAP and mutation testing | Accepted |
 | [0004](0004-read-t3-state-locally.md) | Read T3 state locally and change it only through git | Accepted |
-| [0005](0005-own-cleanup-rule.md) | Apply one inactivity rule to every worktree | Accepted |
+| [0005](0005-own-cleanup-rule.md) | Apply one inactivity rule to every worktree | Partially superseded by [0006](0006-delete-local-changes.md) |
+| [0006](0006-delete-local-changes.md) | Delete uncommitted and untracked files with the worktree | Accepted |

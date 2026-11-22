@@ -34,7 +34,8 @@ any path failed and 2 if the tool could not run.
   the latest run request, start or completion. Renaming, settling or opening a
   thread doesn't count.
 - **Local changes**: uncommitted, untracked and ignored files don't block
-  deletion and are deleted with the worktree.
+  deletion and are deleted with the worktree. That includes nested git
+  repositories and submodules, with any commits in them that no remote has.
 - **Skipped**: worktrees with commits that no remote branch contains.
   `apply --force` deletes them anyway, but not worktrees whose git checks failed.
 - **Branches**: the worktree's checked-out branch is deleted locally, except the

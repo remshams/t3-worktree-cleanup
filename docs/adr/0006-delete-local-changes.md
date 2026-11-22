@@ -30,6 +30,8 @@ Commits that no remote branch contains still make a worktree `skipped`, and only
 ## Consequences
 
 Inactive worktrees are cleaned up without `--force`. Uncommitted, untracked and
-ignored files in them, such as `.env`, are lost and can't be restored, and the branch SHA the tool
-reports only covers committed work. `--force` now only overrides the
-unpushed-commit guard. Locked worktrees still fail to delete.
+ignored files in them, such as `.env`, are lost and can't be restored. That
+includes nested git repositories and submodules with commits that no remote has,
+because the unpushed-commit guard only checks the worktree's own HEAD. The
+branch SHA the tool reports only covers committed work. `--force` now only
+overrides the unpushed-commit guard. Locked worktrees still fail to delete.

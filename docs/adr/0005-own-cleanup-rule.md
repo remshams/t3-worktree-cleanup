@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Partially superseded by [ADR 0006](0006-delete-local-changes.md); all other
+decisions remain accepted.
 
 ## Date
 

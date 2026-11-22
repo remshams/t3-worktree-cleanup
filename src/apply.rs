@@ -74,7 +74,7 @@ fn apply_one(worktree: &Worktree, force: bool) -> Outcome {
         .branch
         .as_deref()
         .and_then(|branch| git::branch_sha(repo, branch).ok());
-    if let Err(error) = git::remove_worktree(repo, &worktree.path, force) {
+    if let Err(error) = git::remove_worktree(repo, &worktree.path) {
         return outcome(&worktree.path, OutcomeStatus::Failed, &error.to_string());
     }
     let branch = worktree.branch.clone().map(|name| {

@@ -249,7 +249,7 @@ fn plan_skips_only_worktrees_with_unpushed_commits() {
         status(&unpushed),
         (
             "skipped".into(),
-            serde_json::json!(["1 commits not on any remote"])
+            serde_json::json!(["1 commit not on any remote"])
         )
     );
 }

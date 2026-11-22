@@ -37,8 +37,8 @@ Tell the user that:
 - the worktree's local branch is deleted too, unless `deleteBranch` is false;
 - the listed threads can't recreate their worktree afterwards, so continuing
   that work needs a new thread;
-- skipped worktrees have uncommitted changes or unpushed commits, which `--force`
-  would delete.
+- uncommitted and untracked files in a deleted worktree are lost;
+- skipped worktrees have unpushed commits, which `--force` would delete.
 
 Ask which worktrees to delete. Never pass `--force` unless the user explicitly
 asks to delete a skipped worktree.

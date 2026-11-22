@@ -18,8 +18,9 @@ deletes commits that no remote has.
 
 ## Decision
 
-This record supersedes one clause of ADR 0005: uncommitted and untracked
-changes no longer make a worktree `skipped`. A worktree that is inactive for
+This record supersedes one clause of ADR 0005: "A worktree with uncommitted or
+untracked changes [...] is skipped unless `apply --force` is given." Uncommitted
+and untracked changes no longer make a worktree `skipped`. A worktree that is inactive for
 longer than `--older-than` is a candidate whatever its working tree contains,
 and `apply` removes it with `git worktree remove --force`.
 
@@ -28,7 +29,7 @@ Commits that no remote branch contains still make a worktree `skipped`, and only
 
 ## Consequences
 
-Inactive worktrees are cleaned up without `--force`. Uncommitted and untracked
-files in them are lost and can't be restored, and the branch SHA the tool
+Inactive worktrees are cleaned up without `--force`. Uncommitted, untracked and
+ignored files in them, such as `.env`, are lost and can't be restored, and the branch SHA the tool
 reports only covers committed work. `--force` now only overrides the
 unpushed-commit guard. Locked worktrees still fail to delete.

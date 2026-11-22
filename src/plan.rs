@@ -16,7 +16,7 @@ pub struct Selection {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
-    /// Inactive and safe to delete.
+    /// Inactive, with no commits that only exist locally. Local changes are deleted.
     Candidate,
     /// Inactive, but deleting it would lose commits that no remote has.
     Skipped,
@@ -174,11 +174,12 @@ fn evaluate(path: PathBuf, threads: Vec<ThreadRow>, cutoff: Timestamp) -> Worktr
 }
 
 /// Reasons that deleting the worktree and its branch would lose commits.
-/// Uncommitted and untracked files don't block deletion.
+/// Uncommitted, untracked and ignored files don't block deletion.
 fn blocking_reasons(path: &Path) -> anyhow::Result<Vec<String>> {
     let unpushed = git::unpushed_commits(path)?;
     Ok(if unpushed > 0 {
-        vec![format!("{unpushed} commits not on any remote")]
+        let noun = if unpushed == 1 { "commit" } else { "commits" };
+        vec![format!("{unpushed} {noun} not on any remote")]
     } else {
         Vec::new()
     })

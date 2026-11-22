@@ -1,7 +1,7 @@
 //! Reads threads and their worktree paths from T3's state database.
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use rusqlite::{Connection, OpenFlags};
 use std::path::{Path, PathBuf};
 
@@ -15,7 +15,7 @@ pub struct ThreadRow {
     pub project_root: PathBuf,
     pub worktree_path: PathBuf,
     pub settled_at: Option<String>,
-    pub activity_at: DateTime<Utc>,
+    pub activity_at: Timestamp,
 }
 
 /// Activity follows T3's own cleanup clock: thread creation, the latest user
@@ -70,21 +70,19 @@ pub fn read_threads(base_dir: &Path) -> Result<Vec<ThreadRow>> {
                 project_root: PathBuf::from(row.get::<_, String>(4)?),
                 worktree_path: PathBuf::from(row.get::<_, String>(5)?),
                 settled_at: row.get(6)?,
-                activity_at: DateTime::<Utc>::MIN_UTC,
+                activity_at: Timestamp::MIN,
             },
             row.get::<_, String>(7)?,
         ))
     })?;
     rows.map(|row| {
         let (mut thread, activity_at) = row?;
-        thread.activity_at = DateTime::parse_from_rfc3339(&activity_at)
-            .with_context(|| {
-                format!(
-                    "thread {} has an invalid timestamp {activity_at:?}",
-                    thread.thread_id
-                )
-            })?
-            .with_timezone(&Utc);
+        thread.activity_at = activity_at.parse().with_context(|| {
+            format!(
+                "thread {} has an invalid timestamp {activity_at:?}",
+                thread.thread_id
+            )
+        })?;
         Ok(thread)
     })
     .collect()

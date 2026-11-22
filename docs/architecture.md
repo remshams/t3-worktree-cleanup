@@ -31,14 +31,15 @@ flowchart TD
    of the selected projects and drops paths that no longer exist. Threads of other
    projects in a kept worktree still count as activity. A worktree is `recent` if any thread was
    active after the cutoff. Otherwise it is a `candidate`, or `skipped` when it
-   has uncommitted or untracked changes or commits no remote branch contains, or
-   when these checks fail.
+   has commits no remote branch contains, or when that check fails. Uncommitted
+   and untracked files don't block deletion.
    The checked-out branch is marked for deletion unless it is `main`, `master` or
    the branch `origin/HEAD` points to.
 3. `apply` finds each requested path in the plan. It skips recent worktrees, and
    skipped ones unless `--force` is set. `--force` never overrides a skip caused by
-   failed checks. It runs `git worktree remove` from the
-   project root, then `git branch -D`, and reports the branch's commit SHA.
+   failed checks. It runs `git worktree remove --force` from the project root,
+   which also deletes uncommitted and untracked files, then `git branch -D`, and
+   reports the branch's commit SHA.
 
 ## Modules and dependencies
 

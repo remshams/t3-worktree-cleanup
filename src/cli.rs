@@ -9,8 +9,9 @@ use std::path::PathBuf;
 /// Run `plan` to preview, then `apply` with the paths to delete. Both print JSON.
 /// Uncommitted, untracked and ignored files, including nested repositories, are
 /// deleted with the worktree. Worktrees with unpushed commits are skipped unless
-/// `apply --force` is given. Deleting a worktree also deletes its local branch,
-/// except the default branch.
+/// `apply --force` is given; commits in nested repositories and submodules don't
+/// count. Deleting a worktree also deletes its local branch, except the default
+/// branch.
 #[derive(Debug, Parser)]
 #[command(version)]
 pub struct Cli {

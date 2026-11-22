@@ -38,7 +38,8 @@ Tell the user that:
 - the listed threads can't recreate their worktree afterwards, so continuing
   that work needs a new thread;
 - uncommitted, untracked and ignored files (such as `.env`) in a deleted
-  worktree are lost;
+  worktree are lost, including nested git repositories and submodules with
+  their unpushed commits;
 - skipped worktrees have unpushed commits, which `--force` would delete, unless
   the reason is a failed git check, which `--force` can't override.
 

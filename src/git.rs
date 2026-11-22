@@ -22,11 +22,6 @@ pub fn current_branch(worktree: &Path) -> Result<Option<String>> {
     Ok(Some(branch).filter(|name| !name.is_empty()))
 }
 
-/// Whether `worktree` has modified, staged or untracked files. Ignored files don't count.
-pub fn has_local_changes(worktree: &Path) -> Result<bool> {
-    Ok(!git(worktree, &["status", "--porcelain"])?.is_empty())
-}
-
 /// Number of commits on HEAD that no remote-tracking branch contains.
 pub fn unpushed_commits(worktree: &Path) -> Result<usize> {
     Ok(git(
@@ -50,14 +45,11 @@ pub fn branch_sha(repo: &Path, branch: &str) -> Result<String> {
     git(repo, &["rev-parse", &format!("refs/heads/{branch}")])
 }
 
-pub fn remove_worktree(repo: &Path, worktree: &Path, force: bool) -> Result<()> {
+/// Removes `worktree` even when it has uncommitted or untracked files. A locked
+/// worktree still fails.
+pub fn remove_worktree(repo: &Path, worktree: &Path) -> Result<()> {
     let worktree = worktree.to_string_lossy();
-    let mut args = vec!["worktree", "remove"];
-    if force {
-        args.push("--force");
-    }
-    args.extend(["--", &worktree]);
-    git(repo, &args).map(drop)
+    git(repo, &["worktree", "remove", "--force", "--", &worktree]).map(drop)
 }
 
 pub fn delete_branch(repo: &Path, branch: &str) -> Result<()> {
